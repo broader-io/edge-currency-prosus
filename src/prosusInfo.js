@@ -14,11 +14,11 @@ const defaultSettings: any = {
 
 export const currencyInfo: EdgeCurrencyInfo = {
   // Basic currency information:
-  currencyCode: 'XMR',
-  displayName: 'Monero',
-  pluginId: 'monero',
+  currencyCode: 'Prosus',
+  displayName: 'Prosus',
+  pluginId: 'prosus',
   requiredConfirmations: 10,
-  walletType: 'wallet:monero',
+  walletType: 'wallet:prosus',
 
   defaultSettings,
 
@@ -29,9 +29,9 @@ export const currencyInfo: EdgeCurrencyInfo = {
   denominations: [
     // An array of Objects of the possible denominations for this currency
     {
-      name: 'XMR',
+      name: 'Prosus',
       multiplier: '1000000000000',
-      symbol: '‎ɱ'
+      symbol: '‎p'
     }
   ],
   metaTokens: []

@@ -25,7 +25,7 @@ import {
 import type {
   QueryParams,
   SendFundsParams
-} from 'mymonero-core-js/lib/myMoneroApi.js'
+} from 'prosus-core-js/lib/prosusApi.js'
 
 import {
   cleanResultLogs,
@@ -35,7 +35,7 @@ import {
   normalizeAddress,
   validateObject
 } from './utils.js'
-import { currencyInfo } from './xmrInfo.js'
+import { currencyInfo } from './prosusInfo.js'
 import { DATA_STORE_FILE, WalletLocalData } from './xmrTypes.js'
 
 const ADDRESS_POLL_MILLISECONDS = 7000
@@ -48,7 +48,7 @@ const PRIMARY_CURRENCY = currencyInfo.currencyCode
 
 const makeSpendMutex = makeMutex()
 
-class MoneroEngine {
+class ProsusEngine {
   walletInfo: EdgeWalletInfo
   edgeTxLibCallbacks: EdgeCurrencyEngineCallbacks
   walletLocalDisklet: Disklet
@@ -61,7 +61,7 @@ class MoneroEngine {
   currencyInfo: EdgeCurrencyInfo
   allTokens: EdgeMetaToken[]
   keyImageCache: Object
-  myMoneroApi: Object
+  prosusApi: Object
   currentSettings: any
   timers: any
   walletId: string
@@ -73,7 +73,7 @@ class MoneroEngine {
     currencyPlugin: EdgeCurrencyTools,
     io_: any,
     walletInfo: EdgeWalletInfo,
-    myMoneroApi: Object,
+    prosusApi: Object,
     opts: EdgeCurrencyEngineOptions
   ) {
     const { walletLocalDisklet, callbacks } = opts
@@ -90,7 +90,7 @@ class MoneroEngine {
     this.walletId = walletInfo.id ? `${walletInfo.id} - ` : ''
     this.currencyInfo = currencyInfo
     this.currencyPlugin = currencyPlugin
-    this.myMoneroApi = myMoneroApi
+    this.prosusApi = prosusApi
 
     this.allTokens = currencyInfo.metaTokens.slice(0)
     // this.customTokens = []
@@ -103,8 +103,8 @@ class MoneroEngine {
     }
 
     // Hard coded for testing
-    // this.walletInfo.keys.moneroKey = '389b07b3466eed587d6bdae09a3613611de9add2635432d6cd1521af7bbc3757'
-    // this.walletInfo.keys.moneroAddress = '0x9fa817e5A48DD1adcA7BEc59aa6E3B1F5C4BeA9a'
+    // this.walletInfo.keys.ProsusKey = '389b07b3466eed587d6bdae09a3613611de9add2635432d6cd1521af7bbc3757'
+    // this.walletInfo.keys.ProsusAddress = '0x9fa817e5A48DD1adcA7BEc59aa6E3B1F5C4BeA9a'
     this.edgeTxLibCallbacks = callbacks
     this.walletLocalDisklet = walletLocalDisklet
 
@@ -115,16 +115,16 @@ class MoneroEngine {
 
   async init() {
     if (
-      typeof this.walletInfo.keys.moneroAddress !== 'string' ||
-      typeof this.walletInfo.keys.moneroViewKeyPrivate !== 'string' ||
-      typeof this.walletInfo.keys.moneroViewKeyPublic !== 'string' ||
-      typeof this.walletInfo.keys.moneroSpendKeyPublic !== 'string'
+      typeof this.walletInfo.keys.ProsusAddress !== 'string' ||
+      typeof this.walletInfo.keys.ProsusViewKeyPrivate !== 'string' ||
+      typeof this.walletInfo.keys.ProsusViewKeyPublic !== 'string' ||
+      typeof this.walletInfo.keys.ProsusSpendKeyPublic !== 'string'
     ) {
       const pubKeys = await this.currencyPlugin.derivePublicKey(this.walletInfo)
-      this.walletInfo.keys.moneroAddress = pubKeys.moneroAddress
-      this.walletInfo.keys.moneroViewKeyPrivate = pubKeys.moneroViewKeyPrivate
-      this.walletInfo.keys.moneroViewKeyPublic = pubKeys.moneroViewKeyPublic
-      this.walletInfo.keys.moneroSpendKeyPublic = pubKeys.moneroSpendKeyPublic
+      this.walletInfo.keys.ProsusAddress = pubKeys.ProsusAddress
+      this.walletInfo.keys.ProsusViewKeyPrivate = pubKeys.ProsusViewKeyPrivate
+      this.walletInfo.keys.ProsusViewKeyPublic = pubKeys.ProsusViewKeyPublic
+      this.walletInfo.keys.ProsusSpendKeyPublic = pubKeys.ProsusSpendKeyPublic
     }
   }
 
@@ -143,7 +143,7 @@ class MoneroEngine {
 
     const response = await this.io.fetch(url, opts)
     if (!response.ok) {
-      const cleanUrl = url.replace(global.moneroApiKey, 'private')
+      const cleanUrl = url.replace(global.ProsusApiKey, 'private')
       throw new Error(
         `The server returned error code ${response.status} for ${cleanUrl}`
       )
@@ -151,13 +151,13 @@ class MoneroEngine {
     return response.json()
   }
 
-  async fetchPostMyMonero(cmd: string, params: Object = {}) {
+  async fetchPostprosus(cmd: string, params: Object = {}) {
     const body = Object.assign(
       {},
       {
-        api_key: this.myMoneroApi.options.apiKey,
-        address: this.walletLocalData.moneroAddress,
-        view_key: this.walletLocalData.moneroViewKeyPrivate,
+        api_key: this.prosusApi.options.apiKey,
+        address: this.walletLocalData.ProsusAddress,
+        view_key: this.walletLocalData.ProsusViewKeyPrivate,
         create_account: true
       },
       params
@@ -166,7 +166,7 @@ class MoneroEngine {
     const options = {
       body: JSON.stringify(body)
     }
-    const url = `${this.currentSettings.otherSettings.mymoneroApiServers[0]}/${cmd}`
+    const url = `${this.currentSettings.otherSettings.prosusApiServers[0]}/${cmd}`
     return this.fetchPost(url, options)
   }
 
@@ -186,11 +186,11 @@ class MoneroEngine {
   }
 
   // **********************************************
-  // Login to mymonero.com server
+  // Login to prosus.com server
   // **********************************************
   async loginInnerLoop() {
     try {
-      const result = await this.fetchPostMyMonero('login')
+      const result = await this.fetchPostprosus('login')
       if ('new_address' in result && !this.loggedIn) {
         this.loggedIn = true
         this.walletLocalData.hasLoggedIn = true
@@ -204,7 +204,7 @@ class MoneroEngine {
         this.addToLoop('saveWalletLoop', SAVE_DATASTORE_MILLISECONDS)
       }
     } catch (e) {
-      this.log.error('Error logging into mymonero', e)
+      this.log.error('Error logging into prosus', e)
     }
   }
 
@@ -214,13 +214,13 @@ class MoneroEngine {
   async checkAddressInnerLoop() {
     try {
       const params: QueryParams = {
-        moneroAddress: this.walletLocalData.moneroAddress,
-        moneroSpendKeyPrivate: this.walletInfo.keys.moneroSpendKeyPrivate,
-        moneroSpendKeyPublic: this.walletInfo.keys.moneroSpendKeyPublic,
-        moneroViewKeyPrivate: this.walletLocalData.moneroViewKeyPrivate
+        ProsusAddress: this.walletLocalData.ProsusAddress,
+        ProsusSpendKeyPrivate: this.walletInfo.keys.ProsusSpendKeyPrivate,
+        ProsusSpendKeyPublic: this.walletInfo.keys.ProsusSpendKeyPublic,
+        ProsusViewKeyPrivate: this.walletLocalData.ProsusViewKeyPrivate
       }
 
-      const addrResult = await this.myMoneroApi.getAddressInfo(params)
+      const addrResult = await this.prosusApi.getAddressInfo(params)
 
       if (this.walletLocalData.blockHeight !== addrResult.blockHeight) {
         this.walletLocalData.blockHeight = addrResult.blockHeight // Convert to decimal
@@ -242,12 +242,12 @@ class MoneroEngine {
       this.walletLocalData.lockedXmrBalance = addrResult.lockedBalance
     } catch (e) {
       this.log.error(
-        'Error fetching address info: ' + this.walletLocalData.moneroAddress + e
+        'Error fetching address info: ' + this.walletLocalData.ProsusAddress + e
       )
     }
   }
 
-  processMoneroTransaction(tx: Object) {
+  processProsusTransaction(tx: Object) {
     const ourReceiveAddresses: string[] = []
 
     const nativeNetworkFee: string = tx.fee != null ? tx.fee : '0'
@@ -257,7 +257,7 @@ class MoneroEngine {
       nativeNetworkFee
     )
     if (netNativeAmount.slice(0, 1) !== '-') {
-      ourReceiveAddresses.push(this.walletLocalData.moneroAddress.toLowerCase())
+      ourReceiveAddresses.push(this.walletLocalData.ProsusAddress.toLowerCase())
     }
 
     let blockHeight = tx.height
@@ -330,12 +330,12 @@ class MoneroEngine {
 
     try {
       const params: QueryParams = {
-        moneroAddress: this.walletLocalData.moneroAddress,
-        moneroSpendKeyPrivate: this.walletInfo.keys.moneroSpendKeyPrivate,
-        moneroSpendKeyPublic: this.walletInfo.keys.moneroSpendKeyPublic,
-        moneroViewKeyPrivate: this.walletLocalData.moneroViewKeyPrivate
+        ProsusAddress: this.walletLocalData.ProsusAddress,
+        ProsusSpendKeyPrivate: this.walletInfo.keys.ProsusSpendKeyPrivate,
+        ProsusSpendKeyPublic: this.walletInfo.keys.ProsusSpendKeyPublic,
+        ProsusViewKeyPrivate: this.walletLocalData.ProsusViewKeyPrivate
       }
-      const transactions = await this.myMoneroApi.getTransactions(params)
+      const transactions = await this.prosusApi.getTransactions(params)
 
       this.log('Fetched transactions count: ' + transactions.length)
 
@@ -343,7 +343,7 @@ class MoneroEngine {
       // Iterate over transactions in address
       for (let i = 0; i < transactions.length; i++) {
         const tx = transactions[i]
-        this.processMoneroTransaction(tx)
+        this.processProsusTransaction(tx)
         if (i % 10 === 0) {
           this.updateOnAddressesChecked(i, transactions.length)
         }
@@ -493,8 +493,8 @@ class MoneroEngine {
     const temp = JSON.stringify({
       enabledTokens: this.walletLocalData.enabledTokens,
       // networkFees: this.walletLocalData.networkFees,
-      moneroAddress: this.walletLocalData.moneroAddress,
-      moneroViewKeyPrivate: this.walletLocalData.moneroViewKeyPrivate
+      ProsusAddress: this.walletLocalData.ProsusAddress,
+      ProsusViewKeyPrivate: this.walletLocalData.ProsusViewKeyPrivate
     })
     this.walletLocalData = new WalletLocalData(temp)
     this.walletLocalDataDirty = true
@@ -648,7 +648,7 @@ class MoneroEngine {
   // synchronous
   getFreshAddress(options: any): EdgeFreshAddress {
     if (this.walletLocalData.hasLoggedIn) {
-      return { publicAddress: this.walletLocalData.moneroAddress }
+      return { publicAddress: this.walletLocalData.ProsusAddress }
     } else {
       return { publicAddress: '' }
     }
@@ -696,7 +696,7 @@ class MoneroEngine {
       throw new Error('Error: invalid ABCSpendInfo')
     }
 
-    // Monero can only have one output
+    // Prosus can only have one output
     if (edgeSpendInfo.spendTargets.length !== 1) {
       throw new Error('Error: only one output allowed')
     }
@@ -771,33 +771,33 @@ class MoneroEngine {
         '1000000000000',
         12
       )
-      // Todo: Yikes. Why does mymonero-core-js take a float, not a string? -paulvp
+      // Todo: Yikes. Why does prosus-core-js take a float, not a string? -paulvp
       const amountFloat = parseFloat(amountFloatString)
 
       sendParams = {
-        moneroAddress: this.walletLocalData.moneroAddress,
-        moneroSpendKeyPrivate: '',
-        moneroSpendKeyPublic: this.walletInfo.keys.moneroSpendKeyPublic,
-        moneroViewKeyPrivate: this.walletLocalData.moneroViewKeyPrivate,
+        ProsusAddress: this.walletLocalData.ProsusAddress,
+        ProsusSpendKeyPrivate: '',
+        ProsusSpendKeyPublic: this.walletInfo.keys.ProsusSpendKeyPublic,
+        ProsusViewKeyPrivate: this.walletLocalData.ProsusViewKeyPrivate,
         targetAddress: publicAddress,
         floatAmount: amountFloat,
-        moneroViewKeyPublic: this.walletLocalData.moneroViewKeyPublic,
+        ProsusViewKeyPublic: this.walletLocalData.ProsusViewKeyPublic,
         nettype: 'mainnet', // 'mainnet' only for now
         isSweepTx: false,
         paymentId: uniqueIdentifier || '',
         priority,
         doBroadcast: false
       }
-      result = await this.myMoneroApi.sendFunds(
+      result = await this.prosusApi.sendFunds(
         Object.assign({}, sendParams, {
-          moneroSpendKeyPrivate: this.walletInfo.keys.moneroSpendKeyPrivate,
+          ProsusSpendKeyPrivate: this.walletInfo.keys.ProsusSpendKeyPrivate,
           onStatus: (code: number) => {
             this.log.warn(`makeSpend:SendFunds - onStatus:${code.toString()}`)
           }
         })
       )
     } catch (e) {
-      // This error is specific to mymonero-core-js: github.com/mymonero/mymonero-core-cpp/blob/a53e57f2a376b05bb0f4d851713321c749e5d8d9/src/monero_transfer_utils.hpp#L112-L162
+      // This error is specific to prosus-core-js: github.com/prosus/prosus-core-cpp/blob/a53e57f2a376b05bb0f4d851713321c749e5d8d9/src/Prosus_transfer_utils.hpp#L112-L162
       this.log.error(e.message)
       const regex = / Have (\d*\.?\d+) XMR; need (\d*\.?\d+) XMR./gm
       const subst = `\nHave: $1 XMR.\nNeed: $2 XMR.`
@@ -830,7 +830,7 @@ class MoneroEngine {
   async signTx(edgeTransaction: EdgeTransaction): Promise<EdgeTransaction> {
     const otherParams = getOtherParams(edgeTransaction)
 
-    // Monero transactions are signed at broadcast
+    // Prosus transactions are signed at broadcast
     if (otherParams.sendParams) {
       return edgeTransaction
     } else {
@@ -847,9 +847,9 @@ class MoneroEngine {
     try {
       const sendParams = otherParams.sendParams
       sendParams.doBroadcast = true
-      const result = await this.myMoneroApi.sendFunds(
+      const result = await this.prosusApi.sendFunds(
         Object.assign({}, sendParams, {
-          moneroSpendKeyPrivate: this.walletInfo.keys.moneroSpendKeyPrivate,
+          ProsusSpendKeyPrivate: this.walletInfo.keys.ProsusSpendKeyPrivate,
           onStatus: (code: number) => {
             this.log.warn(`broadcastTx:SendFunds - onStatus:${code.toString()}`)
           }
@@ -866,7 +866,7 @@ class MoneroEngine {
       this.log.error(
         `broadcastTx failed: ${String(e)} ${cleanTxLogs(edgeTransaction)}`
       )
-      otherParams.sendParams.moneroSpendKeyPrivate = ''
+      otherParams.sendParams.ProsusSpendKeyPrivate = ''
       throw e
     }
   }
@@ -874,25 +874,25 @@ class MoneroEngine {
   // asynchronous
   async saveTx(edgeTransaction: EdgeTransaction) {
     const otherParams = getOtherParams(edgeTransaction)
-    otherParams.sendParams.moneroSpendKeyPrivate = ''
-    otherParams.sendParams.moneroSpendKeyPublic = ''
-    otherParams.sendParams.moneroViewKeyPrivate = ''
-    otherParams.sendParams.moneroViewKeyPublic = ''
+    otherParams.sendParams.ProsusSpendKeyPrivate = ''
+    otherParams.sendParams.ProsusSpendKeyPublic = ''
+    otherParams.sendParams.ProsusViewKeyPrivate = ''
+    otherParams.sendParams.ProsusViewKeyPublic = ''
     this.addTransaction(edgeTransaction.currencyCode, edgeTransaction)
 
     this.edgeTxLibCallbacks.onTransactionsChanged([edgeTransaction])
   }
 
   getDisplayPrivateSeed() {
-    if (this.walletInfo.keys && this.walletInfo.keys.moneroKey) {
-      return this.walletInfo.keys.moneroKey
+    if (this.walletInfo.keys && this.walletInfo.keys.ProsusKey) {
+      return this.walletInfo.keys.ProsusKey
     }
     return ''
   }
 
   getDisplayPublicSeed() {
-    if (this.walletInfo.keys && this.walletInfo.keys.moneroViewKeyPrivate) {
-      return this.walletInfo.keys.moneroViewKeyPrivate
+    if (this.walletInfo.keys && this.walletInfo.keys.ProsusViewKeyPrivate) {
+      return this.walletInfo.keys.ProsusViewKeyPrivate
     }
     return ''
   }
@@ -910,4 +910,4 @@ class MoneroEngine {
   }
 }
 
-export { MoneroEngine }
+export { ProsusEngine }

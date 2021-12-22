@@ -5,7 +5,7 @@
 
 import { type EdgeTransaction } from 'edge-core-js/types'
 
-import { currencyInfo } from './xmrInfo.js'
+import { currencyInfo } from './prosusInfo.js'
 
 export const DATA_STORE_FILE = 'txEngineFolder/walletLocalData.json'
 export const PRIMARY_CURRENCY = currencyInfo.currencyCode

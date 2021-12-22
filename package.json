@@ -1,6 +1,6 @@
 {
-  "name": "edge-currency-monero",
-  "version": "0.3.3",
+  "name": "edge-currency-prosus",
+  "version": "0.0.1",
   "description": "Edge Monero currency plugin",
   "homepage": "https://edge.app",
   "repository": {
@@ -45,7 +45,8 @@
     "biggystring": "^3.0.0",
     "buffer": "^5.0.6",
     "jsonschema": "^1.1.1",
-    "mymonero-core-js": "git://github.com/EdgeApp/mymonero-core-js.git#matthew/txPrivateKey",
+    "prosus-core-js": "ssh://github.com/broader-io/prosus-core-js.git",
+    "react-native-prosus-core": "ssh://github.com/broader-io/react-native-prosus-core.git",
     "uri-js": "^3.0.2"
   },
   "devDependencies": {
@@ -77,8 +78,5 @@
     "webpack": "^4.29.3",
     "webpack-cli": "^3.2.3"
   },
-  "peerDependencies": {
-    "react-native-mymonero-core": "^0.1.0"
-  },
-  "react-native": "./lib/xmrIndex.js"
+  "react-native": "./lib/prosusIndex.js"
 }

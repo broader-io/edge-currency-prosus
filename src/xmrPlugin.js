@@ -19,8 +19,8 @@ import {
 import { initMonero } from 'mymonero-core-js'
 import { parse, serialize } from 'uri-js'
 
-import { MoneroEngine } from './xmrEngine.js'
-import { currencyInfo } from './xmrInfo.js'
+import { MoneroEngine } from './prosusEngine.js'
+import { currencyInfo } from './prosusInfo.js'
 import { DATA_STORE_FILE, WalletLocalData } from './xmrTypes.js'
 
 type InitOptions = {
