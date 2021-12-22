@@ -16,7 +16,7 @@ import {
   type EdgeParsedUri,
   type EdgeWalletInfo
 } from 'edge-core-js/types'
-import { initProsus } from 'prosus-core-js'
+import prosus_bridge_js from 'prosus-core-js'
 import { parse, serialize } from 'uri-js'
 
 import { ProsusEngine } from './prosusEngine.js'
@@ -47,7 +47,7 @@ async function makeProsusTools(
   log: EdgeLog,
   initOptions: InitOptions
 ): Promise<EdgeCurrencyTools> {
-  const { ProsusApi } = await initProsus()
+  const { ProsusApi } = await prosus_bridge_js()
 
   log(`Creating Currency Plugin for prosus`)
   const options = {
