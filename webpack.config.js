@@ -20,7 +20,7 @@ module.exports = {
     ]
   },
   output: {
-    filename: 'edge-currency-monero.js',
+    filename: 'edge-currency-prosus.js',
     path: path.join(path.resolve(__dirname), 'lib/react-native')
   },
   resolve: {
