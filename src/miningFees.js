@@ -3,7 +3,7 @@
 //  * @flow
 //  */
 //
-// import type { EthereumFees, EthereumFee, EthereumCalcedFees } from './xmrTypes.js'
+// import type { EthereumFees, EthereumFee, EthereumCalcedFees } from './prosusTypes.js'
 // import type { EdgeSpendInfo } from 'edge-core-js'
 // import { normalizeAddress } from './utils.js'
 // import { bns } from 'biggystring'

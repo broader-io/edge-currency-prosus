@@ -2,7 +2,7 @@
 
 import 'regenerator-runtime/runtime'
 
-import { makeMoneroPlugin } from './xmrPlugin.js'
+import { makeMoneroPlugin } from './prosusPlugin.js'
 
 const edgeCorePlugins = {
   monero: makeMoneroPlugin

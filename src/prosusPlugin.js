@@ -16,12 +16,12 @@ import {
   type EdgeParsedUri,
   type EdgeWalletInfo
 } from 'edge-core-js/types'
-import { initMonero } from 'mymonero-core-js'
+import { initProsus } from 'prosus-core-js'
 import { parse, serialize } from 'uri-js'
 
-import { MoneroEngine } from './prosusEngine.js'
+import { ProsusEngine } from './prosusEngine.js'
 import { currencyInfo } from './prosusInfo.js'
-import { DATA_STORE_FILE, WalletLocalData } from './xmrTypes.js'
+import { DATA_STORE_FILE, WalletLocalData } from './prosusTypes.js'
 
 type InitOptions = {
   apiKey: string
@@ -42,38 +42,38 @@ function getParameterByName(param, url) {
   return decodeURIComponent(results[2].replace(/\+/g, ' '))
 }
 
-async function makeMoneroTools(
+async function makeProsusTools(
   io: EdgeIo,
   log: EdgeLog,
   initOptions: InitOptions
 ): Promise<EdgeCurrencyTools> {
-  const { MyMoneroApi } = await initMonero()
+  const { ProsusApi } = await initProsus()
 
-  log(`Creating Currency Plugin for monero`)
+  log(`Creating Currency Plugin for prosus`)
   const options = {
     appUserAgentProduct: 'tester',
     appUserAgentVersion: '0.0.1',
     apiKey: initOptions.apiKey,
-    apiServer: 'https://edge.mymonero.com:8443',
+    apiServer: 'https://edge.broader.io',
     fetch: io.fetch,
     randomBytes: io.random
   }
-  const myMoneroApi = new MyMoneroApi(options)
+  const prosusApi = new ProsusApi(options)
 
-  const moneroPlugin: EdgeCurrencyTools = {
-    pluginName: 'monero',
+  const prosusPlugin: EdgeCurrencyTools = {
+    pluginName: 'prosus',
     currencyInfo,
-    myMoneroApi,
+    prosusApi,
 
     createPrivateKey: async (walletType: string) => {
       const type = walletType.replace('wallet:', '')
 
-      if (type === 'monero') {
-        const result = await myMoneroApi.createWallet()
+      if (type === 'prosus') {
+        const result = await prosusApi.createWallet()
         return {
-          moneroKey: result.mnemonic,
-          moneroSpendKeyPrivate: result.moneroSpendKeyPrivate,
-          moneroSpendKeyPublic: result.moneroSpendKeyPublic
+          prosusKey: result.mnemonic,
+          prosusSpendKeyPrivate: result.prosusSpendKeyPrivate,
+          prosusSpendKeyPublic: result.prosusSpendKeyPublic
         }
       } else {
         throw new Error('InvalidWalletType')
@@ -82,15 +82,15 @@ async function makeMoneroTools(
 
     derivePublicKey: async (walletInfo: EdgeWalletInfo) => {
       const type = walletInfo.type.replace('wallet:', '')
-      if (type === 'monero') {
-        const result = await myMoneroApi.createWalletFromMnemonic(
-          walletInfo.keys.moneroKey
+      if (type === 'prosus') {
+        const result = await prosusApi.createWalletFromMnemonic(
+          walletInfo.keys.prosusKey
         )
         return {
-          moneroAddress: result.moneroAddress,
-          moneroViewKeyPrivate: result.moneroViewKeyPrivate,
-          moneroViewKeyPublic: result.moneroViewKeyPublic,
-          moneroSpendKeyPublic: result.moneroSpendKeyPublic
+          prosusAddress: result.prosusAddress,
+          prosusViewKeyPrivate: result.prosusViewKeyPrivate,
+          prosusViewKeyPublic: result.prosusViewKeyPublic,
+          prosusSpendKeyPublic: result.prosusSpendKeyPublic
         }
       } else {
         throw new Error('InvalidWalletType')
@@ -105,7 +105,7 @@ async function makeMoneroTools(
 
       if (
         typeof parsedUri.scheme !== 'undefined' &&
-        parsedUri.scheme !== 'monero'
+        parsedUri.scheme !== 'prosus'
       ) {
         throw new Error('InvalidUriError') // possibly scanning wrong crypto type
       }
@@ -120,7 +120,7 @@ async function makeMoneroTools(
 
       try {
         // verify address is decodable for currency
-        const result = await myMoneroApi.decodeAddress(address)
+        const result = await prosusApi.decodeAddress(address)
         if (result.err_msg === 'Invalid address') {
           throw new Error('InvalidUriError')
         }
@@ -176,7 +176,7 @@ async function makeMoneroTools(
         throw new Error('InvalidPublicAddressError')
       }
       try {
-        const result = await myMoneroApi.decodeAddress(obj.publicAddress)
+        const result = await prosusApi.decodeAddress(obj.publicAddress)
         if (result.err_msg === 'Invalid address') {
           throw new Error('InvalidUriError')
         }
@@ -208,7 +208,7 @@ async function makeMoneroTools(
         queryString = queryString.substr(0, queryString.length - 1)
 
         const serializeObj = {
-          scheme: 'monero',
+          scheme: 'prosus',
           path: obj.publicAddress,
           query: queryString
         }
@@ -218,23 +218,23 @@ async function makeMoneroTools(
     }
   }
 
-  return moneroPlugin
+  return prosusPlugin
 }
 
-export function makeMoneroPlugin(
+export function makeProsusPlugin(
   opts: EdgeCorePluginOptions
 ): EdgeCurrencyPlugin {
   const { io, nativeIo, initOptions = { apiKey: '' } } = opts
 
-  if (nativeIo['edge-currency-monero']) {
-    const { callMyMonero } = nativeIo['edge-currency-monero']
-    global.moneroCore = { methodByString: callMyMonero }
+  if (nativeIo['edge-currency-prosus']) {
+    const { callProsus } = nativeIo['edge-currency-prosus']
+    global.prosusCore = { methodByString: callProsus }
   }
 
   let toolsPromise: Promise<EdgeCurrencyTools>
   function makeCurrencyTools(): Promise<EdgeCurrencyTools> {
     if (toolsPromise != null) return toolsPromise
-    toolsPromise = makeMoneroTools(io, opts.log, initOptions)
+    toolsPromise = makeProsusTools(io, opts.log, initOptions)
     return toolsPromise
   }
 
@@ -243,44 +243,44 @@ export function makeMoneroPlugin(
     opts: EdgeCurrencyEngineOptions
   ): Promise<EdgeCurrencyEngine> {
     const tools: EdgeCurrencyTools = await makeCurrencyTools()
-    const moneroEngine = new MoneroEngine(
+    const prosusEngine = new ProsusEngine(
       tools,
       io,
       walletInfo,
       // $FlowFixMe
-      tools.myMoneroApi,
+      tools.prosusApi,
       opts
     )
-    await moneroEngine.init()
+    await prosusEngine.init()
     try {
-      const result = await moneroEngine.walletLocalDisklet.getText(
+      const result = await prosusEngine.walletLocalDisklet.getText(
         DATA_STORE_FILE
       )
-      moneroEngine.walletLocalData = new WalletLocalData(result)
-      moneroEngine.walletLocalData.moneroAddress =
-        moneroEngine.walletInfo.keys.moneroAddress
-      moneroEngine.walletLocalData.moneroViewKeyPrivate =
-        moneroEngine.walletInfo.keys.moneroViewKeyPrivate
-      moneroEngine.walletLocalData.moneroViewKeyPublic =
-        moneroEngine.walletInfo.keys.moneroViewKeyPublic
-      moneroEngine.walletLocalData.moneroSpendKeyPublic =
-        moneroEngine.walletInfo.keys.moneroSpendKeyPublic
+      prosusEngine.walletLocalData = new WalletLocalData(result)
+      prosusEngine.walletLocalData.prosusAddress =
+        prosusEngine.walletInfo.keys.prosusAddress
+      prosusEngine.walletLocalData.prosusViewKeyPrivate =
+        prosusEngine.walletInfo.keys.prosusViewKeyPrivate
+      prosusEngine.walletLocalData.prosusViewKeyPublic =
+        prosusEngine.walletInfo.keys.prosusViewKeyPublic
+      prosusEngine.walletLocalData.prosusSpendKeyPublic =
+        prosusEngine.walletInfo.keys.prosusSpendKeyPublic
     } catch (err) {
       try {
         opts.log(err)
         opts.log('No walletLocalData setup yet: Failure is ok')
-        moneroEngine.walletLocalData = new WalletLocalData(null)
-        moneroEngine.walletLocalData.moneroAddress =
-          moneroEngine.walletInfo.keys.moneroAddress
-        moneroEngine.walletLocalData.moneroViewKeyPrivate =
-          moneroEngine.walletInfo.keys.moneroViewKeyPrivate
-        moneroEngine.walletLocalData.moneroViewKeyPublic =
-          moneroEngine.walletInfo.keys.moneroViewKeyPublic
-        moneroEngine.walletLocalData.moneroSpendKeyPublic =
-          moneroEngine.walletInfo.keys.moneroSpendKeyPublic
-        await moneroEngine.walletLocalDisklet.setText(
+        prosusEngine.walletLocalData = new WalletLocalData(null)
+        prosusEngine.walletLocalData.prosusAddress =
+          prosusEngine.walletInfo.keys.prosusAddress
+        prosusEngine.walletLocalData.prosusViewKeyPrivate =
+          prosusEngine.walletInfo.keys.prosusViewKeyPrivate
+        prosusEngine.walletLocalData.prosusViewKeyPublic =
+          prosusEngine.walletInfo.keys.prosusViewKeyPublic
+        prosusEngine.walletLocalData.prosusSpendKeyPublic =
+          prosusEngine.walletInfo.keys.prosusSpendKeyPublic
+        await prosusEngine.walletLocalDisklet.setText(
           DATA_STORE_FILE,
-          JSON.stringify(moneroEngine.walletLocalData)
+          JSON.stringify(prosusEngine.walletLocalData)
         )
       } catch (e) {
         opts.log.error(
@@ -289,7 +289,7 @@ export function makeMoneroPlugin(
       }
     }
 
-    const out: EdgeCurrencyEngine = moneroEngine
+    const out: EdgeCurrencyEngine = prosusEngine
     return out
   }
 

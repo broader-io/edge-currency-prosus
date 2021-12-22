@@ -5259,8 +5259,8 @@ promise-inflight@^1.0.1:
   integrity sha1-mEcocL8igTL8vdhoEputEsPAKeM=
 
 "prosus-core-js@ssh://github.com/broader-io/prosus-core-js.git":
-  version "0.0.0"
-  resolved "ssh://github.com/broader-io/prosus-core-js.git#050d34fd708e16126e0632c62314477e129f8433"
+  version "1.1.0"
+  resolved "ssh://github.com/broader-io/prosus-core-js.git#9c5297807a67d33405c6008264434672d6397dbc"
 
 prr@~1.0.1:
   version "1.0.1"
@@ -5358,9 +5358,9 @@ randomfill@^1.0.3:
     randombytes "^2.0.5"
     safe-buffer "^5.1.0"
 
-"react-native-prosus-core@https://github.com/broader-io/react-native-prosus-core.git":
+"react-native-prosus-core@ssh://github.com/broader-io/react-native-prosus-core.git":
   version "0.0.1"
-  resolved "https://github.com/broader-io/react-native-prosus-core.git#50b60ed6da632ac088444bcb29008a5d8c1e0064"
+  resolved "ssh://github.com/broader-io/react-native-prosus-core.git#50b60ed6da632ac088444bcb29008a5d8c1e0064"
 
 read-pkg-up@^1.0.1:
   version "1.0.1"

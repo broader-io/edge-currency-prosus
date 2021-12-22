@@ -36,7 +36,7 @@ import {
   validateObject
 } from './utils.js'
 import { currencyInfo } from './prosusInfo.js'
-import { DATA_STORE_FILE, WalletLocalData } from './xmrTypes.js'
+import { DATA_STORE_FILE, WalletLocalData } from './prosusTypes.js'
 
 const ADDRESS_POLL_MILLISECONDS = 7000
 const TRANSACTIONS_POLL_MILLISECONDS = 4000

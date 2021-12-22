@@ -1,11 +1,11 @@
 {
   "name": "edge-currency-prosus",
   "version": "0.0.1",
-  "description": "Edge Monero currency plugin",
+  "description": "Edge Prosus currency plugin",
   "homepage": "https://edge.app",
   "repository": {
     "type": "git",
-    "url": "git@github.com:EdgeApp/edge-currency-monero.git"
+    "url": "git@github.com:broader-io/edge-currency-prosus.git"
   },
   "license": "SEE LICENSE IN LICENSE",
   "author": "Edge (Airbitz, Inc)",
@@ -13,7 +13,7 @@
     "Paul Puey <paul@edge.app>"
   ],
   "main": "./index.js",
-  "module": "./lib/xmrIndex.js",
+  "module": "./lib/prosusIndex.js",
   "files": [
     "CHANGELOG.md",
     "index.js",
