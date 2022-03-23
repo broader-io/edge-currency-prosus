@@ -45,8 +45,8 @@
     "biggystring": "^3.0.0",
     "buffer": "^5.0.6",
     "jsonschema": "^1.1.1",
-    "prosus-core-js": "git@github.com:broader-io/prosus-core-js.git",
-    "react-native-prosus-core": "git@github.com:broader-io/react-native-prosus-core.git",
+    "prosus-core-js": "https@github.com/broader-io/prosus-core-js.git",
+    "react-native-prosus-core": "https://github.com/broader-io/react-native-prosus-core.git",
     "uri-js": "^3.0.2"
   },
   "devDependencies": {
